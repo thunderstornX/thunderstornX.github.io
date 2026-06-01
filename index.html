@@ -8,19 +8,48 @@
 <style>
   :root{
     --ink:#1a1d21; --muted:#5a626b; --faint:#8a929b;
-    --accent:#14467a; --rule:#e2e5e9; --bg:#ffffff;
+    --accent:#14467a; --rule:#e2e5e9; --bg:#ffffff; --page:#eef1f4;
+    --shadow:0 1px 3px rgba(0,0,0,.10),0 8px 28px rgba(0,0,0,.06);
     --maxw:830px;
+  }
+  html[data-theme="dark"]{
+    --ink:#e6e9ee; --muted:#a3acb8; --faint:#79828f;
+    --accent:#6ea8ff; --rule:#2a2f37; --bg:#15181d; --page:#0c0e12;
+    --shadow:0 1px 3px rgba(0,0,0,.5),0 10px 34px rgba(0,0,0,.45);
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{
-    margin:0; background:#eef1f4; color:var(--ink);
+    margin:0; background:var(--page); color:var(--ink);
     font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    transition:background .25s ease,color .25s ease;
   }
   .sheet{
     max-width:var(--maxw); margin:32px auto; background:var(--bg);
-    padding:52px 56px; box-shadow:0 1px 3px rgba(0,0,0,.10),0 8px 28px rgba(0,0,0,.06);
+    padding:52px 56px; box-shadow:var(--shadow);
+    transition:background .25s ease,box-shadow .25s ease;
   }
+  /* floating toolbar: language + theme */
+  .toolbar{
+    position:fixed; top:16px; right:16px; z-index:50;
+    display:flex; gap:8px; align-items:center;
+  }
+  .toolbar select, .toolbar button{
+    font:600 12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); border:1px solid var(--rule);
+    border-radius:8px; padding:7px 10px; cursor:pointer; box-shadow:var(--shadow);
+    transition:background .2s ease,color .2s ease,border-color .2s ease;
+  }
+  .toolbar button{min-width:38px; font-size:15px; line-height:1}
+  .toolbar select:hover, .toolbar button:hover{border-color:var(--accent)}
+  .egg{
+    position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(8px);
+    z-index:60; background:var(--accent); color:#fff; font-size:13px; font-weight:600;
+    padding:10px 16px; border-radius:10px; box-shadow:0 6px 24px rgba(0,0,0,.28);
+    opacity:0; pointer-events:none; transition:opacity .3s ease,transform .3s ease;
+    max-width:90vw; text-align:center;
+  }
+  .egg.show{opacity:1; transform:translateX(-50%) translateY(0)}
   header{border-bottom:2px solid var(--accent); padding-bottom:18px; margin-bottom:24px}
   h1{
     font:600 33px/1.1 Georgia,"Times New Roman",serif; margin:0 0 4px;
@@ -49,6 +78,8 @@
   .proj .item-title a:hover{color:var(--accent)}
   .proj p{margin:3px 0 0; color:#3a4047; font-size:13.7px}
   .doi{color:var(--faint); font-size:12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .doi a{color:var(--faint); text-decoration:none; border-bottom:1px dotted var(--rule)}
+  .doi a:hover{color:var(--accent); border-bottom-color:var(--accent)}
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:6px 32px}
   .skillrow{margin:4px 0; font-size:13.7px}
   .skillrow b{color:var(--ink); display:inline-block; min-width:96px}
@@ -61,14 +92,44 @@
     .item-meta{white-space:normal}
   }
   @media print{
+    /* Always print light, regardless of the on-screen theme. */
+    :root, html[data-theme="dark"]{
+      --ink:#1a1d21; --muted:#5a626b; --faint:#8a929b;
+      --accent:#14467a; --rule:#e2e5e9; --bg:#ffffff; --page:#ffffff;
+    }
     body{background:#fff}
     .sheet{box-shadow:none; margin:0; max-width:none; padding:0}
     a{color:var(--ink); border:0}
+    .toolbar, .egg{display:none !important}
     @page{margin:14mm}
   }
 </style>
 </head>
 <body>
+
+<div class="toolbar" role="group" aria-label="Page controls">
+  <select id="langSelect" aria-label="Translate this page" title="Translate this page">
+    <option value="">🌐 Language</option>
+    <option value="en">English</option>
+    <option value="fr">Français</option>
+    <option value="de">Deutsch</option>
+    <option value="es">Español</option>
+    <option value="it">Italiano</option>
+    <option value="pt">Português</option>
+    <option value="nl">Nederlands</option>
+    <option value="pl">Polski</option>
+    <option value="sv">Svenska</option>
+    <option value="ru">Русский</option>
+    <option value="ur">اردو</option>
+    <option value="ar">العربية</option>
+    <option value="zh-CN">中文</option>
+    <option value="ja">日本語</option>
+  </select>
+  <button id="themeBtn" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
+</div>
+
+<div class="egg" id="egg" role="status" aria-live="polite"></div>
+
 <main class="sheet">
 
   <header>
@@ -93,13 +154,13 @@
     <div class="item">
       <div class="item-head">
         <span><span class="item-title">Open-Source Data Acquisition Specialist</span>, <span class="item-org">Alphasearch</span></span>
-        <span class="item-meta">2025 to present . US (remote)</span>
+        <span class="item-meta">Apr 2025 to Apr 2026 . US (remote)</span>
       </div>
       <ul>
-        <li>Engineer scalable OSINT acquisition pipelines across a large and varied set of sources.</li>
-        <li>Design high-performance scraping systems in Python and Selenium with custom concurrency patterns.</li>
-        <li>Operate containerised data pipelines on Docker and Linux with high availability.</li>
-        <li>Apply regex parsing, deduplication, and real-time enrichment on large datasets under OSINT and GDPR compliance.</li>
+        <li>Engineered scalable OSINT acquisition pipelines across a large and varied set of sources.</li>
+        <li>Designed high-performance scraping systems in Python and Selenium with custom concurrency patterns.</li>
+        <li>Operated containerised data pipelines on Docker and Linux with high availability.</li>
+        <li>Applied regex parsing, deduplication, and real-time enrichment on large datasets under OSINT and GDPR compliance.</li>
       </ul>
     </div>
 
@@ -134,37 +195,37 @@
     <div class="proj">
       <div class="item-title"><a href="https://github.com/thunderstornX/forenix-oss">forenix-oss</a> . open-source OSINT-to-evidence platform</div>
       <p>Turns public-source intelligence into tamper-evident, audit-ready evidence: a SHA-256 forward-chained audit log, three independent attestation backends (local, GitHub, Sigstore Rekor), and a multi-agent OSINT pipeline across six LLM providers, with an optional SAT auditability trace. TypeScript, Next.js, Prisma. Live at forenix.tech.</p>
-      <div class="doi">DOI: 10.5281/zenodo.20329059</div>
+      <div class="doi">DOI: <a href="https://doi.org/10.5281/zenodo.20329059">10.5281/zenodo.20329059</a></div>
     </div>
 
     <div class="proj">
       <div class="item-title"><a href="https://github.com/thunderstornX/lattice">lattice</a> . accountability layer for multi-agent AI</div>
       <p>Content-addressed, cryptographically signed claim graphs with a revocation waterfall for autonomous multi-agent systems. Python.</p>
-      <div class="doi">DOI: 10.5281/zenodo.20341934</div>
+      <div class="doi">DOI: <a href="https://doi.org/10.5281/zenodo.20341934">10.5281/zenodo.20341934</a></div>
     </div>
 
     <div class="proj">
       <div class="item-title"><a href="https://github.com/thunderstornX/agentic-osint-agent">agentic-osint-agent</a> . autonomous public-source OSINT</div>
       <p>LangGraph ReAct agent over five read-only OSINT tools (WHOIS, DNS, Shodan InternetDB, GitHub dorks, Wayback) with a deterministic evidence ledger and a real 20-target benchmark.</p>
-      <div class="doi">DOI: 10.5281/zenodo.20480446</div>
+      <div class="doi">DOI: <a href="https://doi.org/10.5281/zenodo.20480446">10.5281/zenodo.20480446</a></div>
     </div>
 
     <div class="proj">
       <div class="item-title"><a href="https://github.com/thunderstornX/llm-red-team-toolkit">llm-red-team-toolkit</a> . OWASP LLM Top 10 probing</div>
       <p>Adversarial harness of 47 probes plus 8 jailbreaks mapped to the OWASP LLM Top 10 (2025), with a deterministic heuristic scorer and a runtime authorization gate.</p>
-      <div class="doi">DOI: 10.5281/zenodo.20480444</div>
+      <div class="doi">DOI: <a href="https://doi.org/10.5281/zenodo.20480444">10.5281/zenodo.20480444</a></div>
     </div>
 
     <div class="proj">
       <div class="item-title"><a href="https://github.com/thunderstornX/ai-governance-checker">ai-governance-checker</a> . LLM governance audit</div>
       <p>Pre-deployment risk evaluation of LLM system prompts against the OWASP LLM Top 10, NIST AI RMF 1.0, and the EU AI Act, with a reproducible labelled eval (rules-only F1 0.96).</p>
-      <div class="doi">DOI: 10.5281/zenodo.20480458</div>
+      <div class="doi">DOI: <a href="https://doi.org/10.5281/zenodo.20480458">10.5281/zenodo.20480458</a></div>
     </div>
 
     <div class="proj">
       <div class="item-title"><a href="https://github.com/thunderstornX/rag-threat-intel">rag-threat-intel</a> . sovereign threat-intel RAG</div>
       <p>Retrieval-augmented CVE and threat-intel Q&amp;A on Ollama, pgvector, and FastAPI, comparing three chunking strategies with MRR and answer-faithfulness evaluation.</p>
-      <div class="doi">DOI: 10.5281/zenodo.20480465</div>
+      <div class="doi">DOI: <a href="https://doi.org/10.5281/zenodo.20480465">10.5281/zenodo.20480465</a></div>
     </div>
 
     <div class="proj">
@@ -188,9 +249,9 @@
     <h2>Preprints</h2>
     <p class="note">Master's-project preprints, self-archived on Zenodo.</p>
     <ul>
-      <li>OSINT in Action: a comparative study of OSINT tools for social-media and network intelligence. DOI 10.5281/zenodo.16921792</li>
-      <li>Navigating the Legal Labyrinth: a framework for ethical and compliant OSINT operations. DOI 10.5281/zenodo.16924934</li>
-      <li>A Comprehensive Review of Meshtastic and Similar Networks: applications, security, and performance. DOI 10.5281/zenodo.16925037</li>
+      <li>OSINT in Action: a comparative study of OSINT tools for social-media and network intelligence. DOI <a href="https://doi.org/10.5281/zenodo.16921792">10.5281/zenodo.16921792</a></li>
+      <li>Navigating the Legal Labyrinth: a framework for ethical and compliant OSINT operations. DOI <a href="https://doi.org/10.5281/zenodo.16924934">10.5281/zenodo.16924934</a></li>
+      <li>A Comprehensive Review of Meshtastic and Similar Networks: applications, security, and performance. DOI <a href="https://doi.org/10.5281/zenodo.16925037">10.5281/zenodo.16925037</a></li>
     </ul>
   </section>
 
@@ -231,5 +292,100 @@
   </section>
 
 </main>
+
+<!-- Hidden mount point for the on-demand translation widget. -->
+<div id="google_translate_element" style="display:none"></div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var themeBtn = document.getElementById('themeBtn');
+  var egg = document.getElementById('egg');
+  var langSelect = document.getElementById('langSelect');
+
+  /* ---------- Dark mode ---------- */
+  var stored = null;
+  try { stored = localStorage.getItem('cv-theme'); } catch (e) {}
+  var prefersDark = window.matchMedia &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var theme = stored || (prefersDark ? 'dark' : 'light');
+  applyTheme(theme, false);
+
+  function applyTheme(t, announce) {
+    if (t === 'dark') {
+      root.setAttribute('data-theme', 'dark');
+      themeBtn.textContent = '☀️';
+      themeBtn.title = 'Switch to light mode';
+      if (announce) showEgg('I care about your eyes — so here is a dark mode. 🌙');
+    } else {
+      root.removeAttribute('data-theme');
+      themeBtn.textContent = '🌙';
+      themeBtn.title = 'Switch to dark mode';
+    }
+  }
+
+  var eggTimer;
+  function showEgg(msg) {
+    egg.textContent = msg;
+    egg.classList.add('show');
+    clearTimeout(eggTimer);
+    eggTimer = setTimeout(function () { egg.classList.remove('show'); }, 3600);
+  }
+
+  themeBtn.addEventListener('click', function () {
+    var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next, next === 'dark');
+    try { localStorage.setItem('cv-theme', next); } catch (e) {}
+  });
+
+  /* ---------- Language switch (on-demand Google Translate) ---------- */
+  var gtLoaded = false;
+  window.googleTranslateElementInit = function () {
+    new google.translate.TranslateElement(
+      { pageLanguage: 'en', autoDisplay: false },
+      'google_translate_element'
+    );
+  };
+
+  function loadGT() {
+    return new Promise(function (resolve) {
+      if (gtLoaded) { resolve(); return; }
+      var s = document.createElement('script');
+      s.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      s.onload = function () { gtLoaded = true; setTimeout(resolve, 600); };
+      document.head.appendChild(s);
+    });
+  }
+
+  // Drive the hidden Google combo, the supported integration point.
+  function setLang(code) {
+    var combo = document.querySelector('.goog-te-combo');
+    if (!combo) return false;
+    combo.value = code;
+    combo.dispatchEvent(new Event('change'));
+    return true;
+  }
+
+  langSelect.addEventListener('change', function () {
+    var code = langSelect.value;
+    if (!code) return;
+    if (code === 'en') {
+      // Clearing the translation cookie reverts to the original English.
+      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + location.hostname;
+      location.reload();
+      return;
+    }
+    loadGT().then(function () {
+      if (!setLang(code)) {
+        // Widget not ready yet; retry briefly.
+        var tries = 0, iv = setInterval(function () {
+          if (setLang(code) || ++tries > 12) clearInterval(iv);
+        }, 400);
+      }
+    });
+  });
+})();
+</script>
 </body>
 </html>
