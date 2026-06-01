@@ -7,13 +7,13 @@
 <meta name="description" content="Ali Murtaza Bhutto - AI Security Engineer, OSINT and Digital Forensics. MSc Cybersecurity.">
 <style>
   :root{
-    --ink:#1a1d21; --muted:#5a626b; --faint:#8a929b;
+    --ink:#1a1d21; --body:#33383d; --muted:#5a626b; --faint:#8a929b;
     --accent:#14467a; --rule:#e2e5e9; --bg:#ffffff; --page:#eef1f4;
     --shadow:0 1px 3px rgba(0,0,0,.10),0 8px 28px rgba(0,0,0,.06);
     --maxw:830px;
   }
   html[data-theme="dark"]{
-    --ink:#e6e9ee; --muted:#a3acb8; --faint:#79828f;
+    --ink:#e6e9ee; --body:#c4cad2; --muted:#a3acb8; --faint:#79828f;
     --accent:#6ea8ff; --rule:#2a2f37; --bg:#15181d; --page:#0c0e12;
     --shadow:0 1px 3px rgba(0,0,0,.5),0 10px 34px rgba(0,0,0,.45);
   }
@@ -50,6 +50,11 @@
     max-width:90vw; text-align:center;
   }
   .egg.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  /* Suppress the Google Translate banner that otherwise shoves the page
+     (and the fixed toolbar) downward. We keep the translation, drop the bar. */
+  .goog-te-banner-frame, .skiptranslate{display:none !important}
+  body{top:0 !important}
+  html, body{min-height:100%}
   header{border-bottom:2px solid var(--accent); padding-bottom:18px; margin-bottom:24px}
   h1{
     font:600 33px/1.1 Georgia,"Times New Roman",serif; margin:0 0 4px;
@@ -64,7 +69,7 @@
     font:600 12px/1 Georgia,serif; text-transform:uppercase; letter-spacing:2px;
     color:var(--accent); margin:0 0 12px; padding-bottom:6px; border-bottom:1px solid var(--rule);
   }
-  .summary{color:#33383d; font-size:14.5px}
+  .summary{color:var(--body); font-size:14.5px}
   .item{margin-bottom:15px}
   .item:last-child{margin-bottom:0}
   .item-head{display:flex; justify-content:space-between; align-items:baseline; gap:14px}
@@ -72,18 +77,18 @@
   .item-org{color:var(--accent); font-weight:600}
   .item-meta{color:var(--faint); font-size:12.5px; white-space:nowrap}
   ul{margin:6px 0 0; padding-left:18px}
-  li{margin:2px 0; color:#3a4047; font-size:13.7px}
+  li{margin:2px 0; color:var(--body); font-size:13.7px}
   .proj{margin-bottom:12px}
   .proj .item-title a{color:var(--ink); text-decoration:none}
   .proj .item-title a:hover{color:var(--accent)}
-  .proj p{margin:3px 0 0; color:#3a4047; font-size:13.7px}
+  .proj p{margin:3px 0 0; color:var(--body); font-size:13.7px}
   .doi{color:var(--faint); font-size:12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   .doi a{color:var(--faint); text-decoration:none; border-bottom:1px dotted var(--rule)}
   .doi a:hover{color:var(--accent); border-bottom-color:var(--accent)}
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:6px 32px}
   .skillrow{margin:4px 0; font-size:13.7px}
   .skillrow b{color:var(--ink); display:inline-block; min-width:96px}
-  .certs{font-size:13.7px; color:#3a4047}
+  .certs{font-size:13.7px; color:var(--body)}
   .note{font-size:12.5px; color:var(--faint); margin-top:4px}
   @media (max-width:640px){
     .sheet{padding:30px 22px; margin:0}
@@ -358,11 +363,21 @@
   }
 
   // Drive the hidden Google combo, the supported integration point.
+  // Google injects a top banner and sets body{top:40px} inline; undo both
+  // so our fixed toolbar and the page stay put.
+  function killBanner() {
+    if (document.body) document.body.style.top = '0px';
+    var f = document.querySelector('.goog-te-banner-frame');
+    if (f && f.parentNode) f.style.display = 'none';
+  }
+
   function setLang(code) {
     var combo = document.querySelector('.goog-te-combo');
     if (!combo) return false;
     combo.value = code;
     combo.dispatchEvent(new Event('change'));
+    // Google re-applies the body offset a few times after the change event.
+    [0, 200, 500, 900, 1500].forEach(function (t) { setTimeout(killBanner, t); });
     return true;
   }
 
