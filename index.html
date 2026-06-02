@@ -131,6 +131,7 @@
     <option value="ja">日本語</option>
   </select>
   <button id="themeBtn" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
+  <button id="dlBtn" aria-label="Download as PDF" title="Download as PDF (print to PDF)">⬇ PDF</button>
 </div>
 
 <div class="egg" id="egg" role="status" aria-live="polite"></div>
@@ -341,6 +342,13 @@
     var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     applyTheme(next, next === 'dark');
     try { localStorage.setItem('cv-theme', next); } catch (e) {}
+  });
+
+  /* ---------- Download as PDF (browser print -> Save as PDF) ---------- */
+  // Print CSS forces light theme and hides the toolbar, so the saved PDF
+  // always matches the live CV with no separate file to keep in sync.
+  document.getElementById('dlBtn').addEventListener('click', function () {
+    window.print();
   });
 
   /* ---------- Language switch (on-demand Google Translate) ---------- */
